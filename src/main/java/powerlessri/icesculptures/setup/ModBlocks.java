@@ -1,7 +1,11 @@
 package powerlessri.icesculptures.setup;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
@@ -30,13 +34,19 @@ public final class ModBlocks {
     @SubscribeEvent
     public static void onBlockRegister(RegistryEvent.Register<Block> event) {
         IForgeRegistry<Block> r = event.getRegistry();
-        r.register(new SculptureBlock(Block.Properties.create(Material.ICE)).setRegistryName(new ResourceLocation(IceSculptures.MODID, "sculpture_block")));
+        r.register(new SculptureBlock(Block.Properties.create(Material.ICE).slipperiness(0.98F).hardnessAndResistance(0.5F).sound(SoundType.GLASS)).setRegistryName(new ResourceLocation(IceSculptures.MODID, "sculpture_block")));
+    }
+
+    @SubscribeEvent
+    public static void onItemRegister(RegistryEvent.Register<Item> event) {
+        IForgeRegistry<Item> r = event.getRegistry();
+        r.register(new BlockItem(sculptureBlock, new Item.Properties().group(ItemGroup.MISC)).setRegistryName(sculptureBlock.getRegistryName()));
     }
 
     @SubscribeEvent
     public static void onTileEntityRegister(RegistryEvent.Register<TileEntityType<?>> event) {
         IForgeRegistry<TileEntityType<?>> r = event.getRegistry();
-        r.register(TileEntityType.Builder.create(SculptureTileEntity::new, sculptureBlock).build(null).setRegistryName(new ResourceLocation(IceSculptures.MODID, "sculpture_block")));
+        r.register(TileEntityType.Builder.create(SculptureTileEntity::new, sculptureBlock).build(null).setRegistryName(sculptureBlock.getRegistryName()));
     }
 
     @SubscribeEvent

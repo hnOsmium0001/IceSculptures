@@ -20,8 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.lwjgl.opengl.GL11.GL_FALSE;
-
 // Adapted from Botania
 public final class ShaderUtils {
 
@@ -32,7 +30,7 @@ public final class ShaderUtils {
 
     public static int sculpture = 0;
 
-    public static void init() {
+    public static void setup() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getResourceManager() instanceof IReloadableResourceManager) {
             IReloadableResourceManager current = (IReloadableResourceManager) mc.getResourceManager();
@@ -63,35 +61,46 @@ public final class ShaderUtils {
     }
 
     private static int createProgram(IResourceManager manager, String vert, String frag) {
-        int vertId = 0, fragId = 0, program;
-        if (vert != null)
+        int vertId = 0;
+        if (vert != null) {
             vertId = createShader(manager, vert, GLX.GL_VERTEX_SHADER);
-        if (frag != null)
+        }
+        int fragId = 0;
+        if (frag != null) {
             fragId = createShader(manager, frag, GLX.GL_FRAGMENT_SHADER);
+        }
 
-        program = GLX.glCreateProgram();
-        if (program == 0)
+        int program = GLX.glCreateProgram();
+        // Failed to create program
+        if (program == 0) {
+            GLX.glDeleteShader(vertId);
+            GLX.glDeleteShader(fragId);
             return 0;
+        }
 
-        if (vert != null)
+        if (vert != null) {
             GLX.glAttachShader(program, vertId);
-        if (frag != null)
+        }
+        if (frag != null) {
             GLX.glAttachShader(program, fragId);
+        }
 
+        // Failed to link program to shaders into an executable on GPU
         GLX.glLinkProgram(program);
         if (GLX.glGetProgrami(program, GLX.GL_LINK_STATUS) == GL11.GL_FALSE) {
             IceSculptures.logger.warn("Error encountered when linking program containing VS {} and FS {}. Log output:", vert, frag);
             IceSculptures.logger.warn(GLX.glGetProgramInfoLog(program, 32768));
+            GLX.glDeleteProgram(program);
+            GLX.glDeleteShader(vertId);
+            GLX.glDeleteShader(fragId);
             return 0;
         }
 
         // "Delete" the shader objects so that we only have to track the program
         // When the program is deleted (which we do on resource reload), the shaders will be deleted automatically as well
         // because there is not programs linked to it
-        if (vert != null)
-            GLX.glDeleteShader(vertId);
-        if (frag != null)
-            GLX.glDeleteShader(fragId);
+        GLX.glDeleteShader(vertId);
+        GLX.glDeleteShader(fragId);
 
         return program;
     }
@@ -107,7 +116,7 @@ public final class ShaderUtils {
             GLX.glShaderSource(shader, readFileAsString(manager, filename));
             GLX.glCompileShader(shader);
 
-            if (GLX.glGetShaderi(shader, GLX.GL_COMPILE_STATUS) == GL_FALSE) {
+            if (GLX.glGetShaderi(shader, GLX.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
                 String s1 = StringUtils.trim(GLX.glGetShaderInfoLog(shader, 32768));
                 throw new IOException("Couldn't compile " + filename + ": " + s1);
             }
@@ -116,12 +125,12 @@ public final class ShaderUtils {
         } catch (Exception e) {
             GLX.glDeleteShader(shader);
             e.printStackTrace();
-            return -1;
+            return 0;
         }
     }
 
     private static String readFileAsString(IResourceManager manager, String filename) throws Exception {
-        InputStream in = manager.getResource(new ResourceLocation(IceSculptures.MODID, filename)).getInputStream();
+        InputStream in = manager.getResource(new ResourceLocation(IceSculptures.MODID, "shaders/" + filename)).getInputStream();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             return reader.lines().collect(Collectors.joining("\n"));

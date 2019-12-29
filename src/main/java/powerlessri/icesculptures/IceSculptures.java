@@ -6,11 +6,13 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.*;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import powerlessri.icesculptures.geometry.ShaderUtils;
 
 @Mod(IceSculptures.MODID)
 public class IceSculptures {
@@ -34,12 +36,11 @@ public class IceSculptures {
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-        IceSculptures mod = (IceSculptures) ModLoadingContext.get().getActiveContainer().getMod();
-        Validate.isTrue(mod == this);
         instance = this;
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
+        ShaderUtils.setup();
     }
 
     private void loadComplete(final FMLLoadCompleteEvent event) {

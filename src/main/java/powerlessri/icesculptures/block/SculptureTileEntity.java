@@ -10,7 +10,18 @@ public class SculptureTileEntity extends TileEntity {
 
     public SculptureTileEntity() {
         super(ModBlocks.sculptureTileEntity);
-        this.mesh = new Mesh();
+        mesh = new Mesh();
+        mesh.setup();
         // TODO data sync
+    }
+
+    public Mesh getMesh() {
+        return mesh;
+    }
+
+    @Override
+    public void remove() {
+        super.remove();
+        mesh.cleanup();
     }
 }
