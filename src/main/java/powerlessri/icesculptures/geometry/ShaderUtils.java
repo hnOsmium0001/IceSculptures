@@ -20,15 +20,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
+
 // Adapted from Botania
 public final class ShaderUtils {
 
     private ShaderUtils() {
     }
 
-    // TODO utiltity to use/release shader
-
     public static int sculpture = 0;
+    public static int sculpture_modelView = 0;
+    public static int sculpture_projection = 0;
 
     public static void setup() {
         Minecraft mc = Minecraft.getInstance();
@@ -44,12 +46,16 @@ public final class ShaderUtils {
         }
 
         sculpture = deleteProgram(sculpture);
+        sculpture_modelView = 0;
+        sculpture_projection = 0;
 
         loadPrograms(manager);
     }
 
     private static void loadPrograms(IResourceManager manager) {
         sculpture = createProgram(manager, "sculpture.vsh", "sculpture.fsh");
+        sculpture_modelView = glGetUniformLocation(sculpture, "modelView");
+        sculpture_projection = glGetUniformLocation(sculpture, "projection");
     }
 
     // Return int as a convenience and shorter way to clear shader IDs

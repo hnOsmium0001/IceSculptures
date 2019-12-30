@@ -1,20 +1,15 @@
 package powerlessri.icesculptures.geometry;
 
-import com.mojang.blaze3d.platform.GLX;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.world.gen.OctavesNoiseGenerator;
-import net.minecraft.world.gen.PerlinNoiseGenerator;
-import net.minecraft.world.gen.SimplexNoiseGenerator;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.SidedProvider;
 import net.minecraftforge.fml.common.thread.EffectiveSide;
-import net.minecraftforge.forgespi.Environment;
 
+import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -29,9 +24,7 @@ public class Mesh {
     private BitSet lattice = new BitSet(ppa * ppa * ppa);
     private List<Triangle> triangles = new ArrayList<>();
 
-    @OnlyIn(Dist.CLIENT)
     private int vao = 0;
-    @OnlyIn(Dist.CLIENT)
     private int vbo = 0;
 
     public void setup() {
@@ -47,7 +40,6 @@ public class Mesh {
     }
 
     public void fill() {
-        // TODO actual mesh generation based on iso value
 //        Random rand = new Random();
 //        for (int x = 0; x < ppa; x++) {
 //            for (int y = 0; y < ppa; y++) {
@@ -60,22 +52,17 @@ public class Mesh {
 //        }
 
         OctavesNoiseGenerator noise = new OctavesNoiseGenerator(new Random(), 4);
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
         double t = 0D;
-        for (int x = 0; x < ppa; x++) {
-            for (int y = 0; y < ppa; y++) {
-                for (int z = 0; z < ppa; z++) {
-                    double v = noise.func_215462_a(x, y, z, 0D, 0D, false);
+        for (int x = 1; x < ppa - 1; x++) {
+            for (int y = 1; y < ppa - 1; y++) {
+                for (int z = 1; z < ppa - 1; z++) {
+                    double v = noise.func_215462_a(x / 2D, y / 2D, z / 2D, 0D, 0D, false);
                     if (v > t) {
                         lattice.set(indexFromPos(x, y, z));
                     }
-                    min = Math.min(min, v);
-                    max = Math.max(max, v);
                 }
             }
         }
-        System.out.println(min + " " + max);
 
 //        int mx = 8;
 //        int my = 8;
@@ -92,6 +79,14 @@ public class Mesh {
 //                }
 //            }
 //        }
+
+//        for (int x = 1; x < ppa - 1; x++) {
+//            for (int y = 1; y < ppa - 1; y++) {
+//                for (int z = 1; z < ppa - 1; z++) {
+//                    lattice.set(indexFromPos(x, y, z));
+//                }
+//            }
+//        }
     }
 
     public void march() {
@@ -104,9 +99,6 @@ public class Mesh {
                 }
             }
         }
-        for (Triangle triangle : triangles) {
-
-        }
     }
 
     public void cleanup() {
@@ -116,7 +108,6 @@ public class Mesh {
         }
         // Prevent loading GL stuff on dedicated server
         DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
-            System.out.println("cleanup");
             glDeleteBuffers(vbo);
             vbo = 0;
             glDeleteVertexArrays(vao);
@@ -126,102 +117,143 @@ public class Mesh {
 
     @OnlyIn(Dist.CLIENT)
     private void createGLStates() {
-        System.out.println("create vbo");
         // Create the VBO
         vbo = glGenBuffers();
 
-        // Setup VAO
+        // Create and bind the VAO
+        vao = glGenVertexArrays();
+        glBindVertexArray(vao);
         {
-            // Create and bind the VAO
-            vao = glGenVertexArrays();
-            glBindVertexArray(vao);
-
-            // Attributes must be enabled for setting them up and using them in shaders
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-
             // Setup the attributes, note that attributes can live in different VBOs, we only use one here for simplicity
             // Technically we only need to bind the VBO once here, but I left it for clarity
 
             // Position attribute
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, Float.SIZE * 3 /* Size of color attribute */, 0);
-            // Color attribute
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, Float.BYTES * 3 * 2 /* Size of color + normal attribute */, 0);
+            // Normal attribute
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, Float.SIZE * 3 /* Size of position attribute */, Float.SIZE * 3 /* Size of one position attribute */);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, Float.BYTES * 3 * 2 /* Size of color + position attribute */, Float.BYTES * 3 /* Size of a position attribute */);
+//            // Color attribute
+//            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//            glEnableVertexAttribArray(2);
+//            glVertexAttribPointer(2, 3, GL_FLOAT, false, Float.BYTES * 3 * 2 /* Size of position + normal attribute */, Float.BYTES * 3 * 2 /* Size of a position and a normal attribute */);
 
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
+            // VAO does not track bound VBO directly, unbind to avoid accidental modification
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            // Unbind VAO to prevent accidental modification
-            glBindVertexArray(0);
+            // No need to disable attributes since they are directly controlled by the VAO
+            // However if this is done without a VAO, attributes need to be disabled for attribute pointers to be invalidated
+            // otherwise either the client segfaults due to dangling pointers or OpenGL errors due to invalid VRAM address
         }
-
-        // Unbind everything else to prevent accidental modification
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // Unbind VAO to prevent accidental modification
+        glBindVertexArray(0);
     }
 
     @OnlyIn(Dist.CLIENT)
     public void populateVBO() {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        // TODO add color
-        float r = 0F;
-        float g = 0F;
-        float b = 1F;
-
         // 3 vertices per triangle, 2 attributes per triangle, 3 values per attribute
         float[] data = new float[triangles.size() * 3 * 2 * 3];
         for (int i = 0, di = 0; i < triangles.size(); i++) {
             Triangle triangle = triangles.get(i);
+
+            // TODO fix normalization
+            // TODO use vertex normal
+            Vector3f edge1 = new Vector3f();
+            Vector3f edge2 = new Vector3f();
+            edge1.sub(triangle.v1, triangle.v0);
+            edge2.sub(triangle.v2, triangle.v0);
+            Vector3f normal = new Vector3f();
+            normal.cross(edge2, edge1);
+            normal.normalize();
+
             data[di++] = triangle.v0.x;
             data[di++] = triangle.v0.y;
             data[di++] = triangle.v0.z;
-            data[di++] = r;
-            data[di++] = g;
-            data[di++] = b;
+            data[di++] = normal.x;
+            data[di++] = normal.y;
+            data[di++] = normal.z;
 
             data[di++] = triangle.v1.x;
             data[di++] = triangle.v1.y;
             data[di++] = triangle.v1.z;
-            data[di++] = r;
-            data[di++] = g;
-            data[di++] = b;
+            data[di++] = normal.x;
+            data[di++] = normal.y;
+            data[di++] = normal.z;
 
             data[di++] = triangle.v2.x;
             data[di++] = triangle.v2.y;
             data[di++] = triangle.v2.z;
-            data[di++] = r;
-            data[di++] = g;
-            data[di++] = b;
+            data[di++] = normal.x;
+            data[di++] = normal.y;
+            data[di++] = normal.z;
         }
-        glBufferData(GL_ARRAY_BUFFER, data, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void draw() {
-//        glUseProgram(ShaderUtils.sculpture);
-//        glBindVertexArray(vao);
-//        glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
-//        glBindVertexArray(0);
-//        glUseProgram(0);
+    public void draw(double x, double y, double z) {
+        // TODO precompute all matrices in CPU code
+        GlStateManager.pushMatrix();
+        GlStateManager.translated(x, y, z);
+        float[] modelView = new float[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelView);
+        GlStateManager.popMatrix();
+        float[] projection = new float[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projection);
 
-        Tessellator t = Tessellator.getInstance();
-        BufferBuilder b = t.getBuffer();
-        b.begin(GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-        int i = 0;
-        for (Triangle triangle : triangles) {
-            if (i == 64) {
-                t.draw();
-                b.begin(GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-            }
-            b.pos(triangle.v0.x, triangle.v0.y, triangle.v0.z).color(0F, 0F, 1F, 1F).endVertex();
-            b.pos(triangle.v1.x, triangle.v1.y, triangle.v1.z).color(0F, 0F, 1F, 1F).endVertex();
-            b.pos(triangle.v2.x, triangle.v2.y, triangle.v2.z).color(0F, 0F, 1F, 1F).endVertex();
-            i++;
-        }
-        t.draw();
+        glUseProgram(ShaderUtils.sculpture);
+        glUniformMatrix4fv(ShaderUtils.sculpture_modelView, false, modelView);
+        glUniformMatrix4fv(ShaderUtils.sculpture_projection, false, projection);
+
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
+        glBindVertexArray(0);
+
+        glUseProgram(0);
+
+//        Tessellator t = Tessellator.getInstance();
+//        BufferBuilder b = t.getBuffer();
+//        {
+//            b.begin(GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+//            int i = 0;
+//            for (Triangle triangle : triangles) {
+//                if (i == 128) {
+//                    t.draw();
+//                    b.begin(GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+//                }
+//                b.pos(triangle.v0.x, triangle.v0.y, triangle.v0.z).color(0F, 0F, 1F, 1F).endVertex();
+//                b.pos(triangle.v1.x, triangle.v1.y, triangle.v1.z).color(0F, 0F, 1F, 1F).endVertex();
+//                b.pos(triangle.v2.x, triangle.v2.y, triangle.v2.z).color(0F, 0F, 1F, 1F).endVertex();
+//                i++;
+//            }
+//            t.draw();
+//        }
+//        {
+//            glLineWidth(0.5F);
+//            b.begin(GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+//            int i = 0;
+//            for (Triangle triangle : triangles) {
+//                if (i == 128) {
+//                    t.draw();
+//                    b.begin(GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+//                }
+//                b.pos(triangle.v0.x, triangle.v0.y, triangle.v0.z).color(0F, 0F, 0F, 1F).endVertex();
+//                b.pos(triangle.v1.x, triangle.v1.y, triangle.v1.z).color(0F, 0F, 0F, 1F).endVertex();
+//
+//                b.pos(triangle.v1.x, triangle.v1.y, triangle.v1.z).color(0F, 0F, 0F, 1F).endVertex();
+//                b.pos(triangle.v2.x, triangle.v2.y, triangle.v2.z).color(0F, 0F, 0F, 1F).endVertex();
+//
+//                b.pos(triangle.v2.x, triangle.v2.y, triangle.v2.z).color(0F, 0F, 0F, 1F).endVertex();
+//                b.pos(triangle.v0.x, triangle.v0.y, triangle.v0.z).color(0F, 0F, 0F, 1F).endVertex();
+//                i++;
+//            }
+//            t.draw();
+//        }
     }
 }

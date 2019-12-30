@@ -32,7 +32,10 @@ public class IceSculptures {
         eventBus.addListener(this::loadComplete);
         eventBus.addListener(Config::onLoad);
 
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> eventBus.addListener(this::clientSetup));
+        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
+            eventBus.addListener(this::clientSetup);
+            ShaderUtils.setup();
+        });
     }
 
     private void setup(final FMLCommonSetupEvent event) {
@@ -40,7 +43,6 @@ public class IceSculptures {
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
-        ShaderUtils.setup();
     }
 
     private void loadComplete(final FMLLoadCompleteEvent event) {
