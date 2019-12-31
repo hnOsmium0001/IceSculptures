@@ -56,4 +56,9 @@ public final class ModBlocks {
         IForgeRegistry<TileEntityType<?>> r = event.getRegistry();
         r.register(TileEntityType.Builder.create(MeshTileEntity::new, sculptureBlock, snowGlobeViewBlock).build(null).setRegistryName(new ResourceLocation(IceSculptures.MODID, "mesh")));
     }
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        ClientRegistry.bindTileEntitySpecialRenderer(MeshTileEntity.class, new SculptureRenderer());
+    }
 }

@@ -10,28 +10,6 @@ public final class Config {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Common config
-    ///////////////////////////////////////////////////////////////////////////
-
-    public static final CommonCategory COMMON;
-
-    public static final class CommonCategory {
-
-        private CommonCategory(ForgeConfigSpec.Builder builder) {
-            builder.comment("General config options").push("common");
-            builder.pop();
-        }
-    }
-
-    static final ForgeConfigSpec COMMON_SPEC;
-
-    static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-        COMMON = new CommonCategory(builder);
-        COMMON_SPEC = builder.build();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     // Client config
     ///////////////////////////////////////////////////////////////////////////
 
@@ -58,9 +36,5 @@ public final class Config {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         CLIENT = new ClientCategory(builder);
         CLIENT_SPEC = builder.build();
-    }
-
-    static void onLoad(ModConfig.Loading event) {
-        IceSculptures.logger.debug("Loaded {} config file {}", IceSculptures.MODID, event.getConfig().getFileName());
     }
 }

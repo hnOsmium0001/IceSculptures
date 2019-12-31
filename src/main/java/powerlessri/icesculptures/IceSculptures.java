@@ -29,27 +29,16 @@ public class IceSculptures {
 
     public IceSculptures() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CLIENT_SPEC);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
 
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         eventBus.addListener(this::setup);
-        eventBus.addListener(this::loadComplete);
-        eventBus.addListener(Config::onLoad);
 
         DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
-            eventBus.addListener(this::clientSetup);
             ShaderUtils.setup();
         });
     }
 
     private void setup(final FMLCommonSetupEvent event) {
         instance = this;
-    }
-
-    private void clientSetup(final FMLClientSetupEvent event) {
-        ClientRegistry.bindTileEntitySpecialRenderer(MeshTileEntity.class, new SculptureRenderer());
-    }
-
-    private void loadComplete(final FMLLoadCompleteEvent event) {
     }
 }
