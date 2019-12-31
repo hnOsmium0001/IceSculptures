@@ -4,6 +4,4 @@ public final class ModItems {
 
     private ModItems() {
     }
-
-
 }

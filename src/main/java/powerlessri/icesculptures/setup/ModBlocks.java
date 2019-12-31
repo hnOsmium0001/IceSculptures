@@ -29,12 +29,12 @@ public final class ModBlocks {
     private ModBlocks() {
     }
 
-    @ObjectHolder("icesculptures:sculpture")
+    @ObjectHolder(IceSculptures.MODID + ":sculpture")
     public static SculptureBlock sculptureBlock;
-    @ObjectHolder("icesculptures:snow_globe_view")
+    @ObjectHolder(IceSculptures.MODID + ":snow_globe_view")
     public static SnowGlobeBlock snowGlobeViewBlock;
 
-    @ObjectHolder("icesculptures:mesh")
+    @ObjectHolder(IceSculptures.MODID + ":mesh")
     public static TileEntityType<MeshTileEntity> meshTileEntity;
 
     @SubscribeEvent
@@ -55,10 +55,5 @@ public final class ModBlocks {
     public static void onTileEntityRegister(RegistryEvent.Register<TileEntityType<?>> event) {
         IForgeRegistry<TileEntityType<?>> r = event.getRegistry();
         r.register(TileEntityType.Builder.create(MeshTileEntity::new, sculptureBlock, snowGlobeViewBlock).build(null).setRegistryName(new ResourceLocation(IceSculptures.MODID, "mesh")));
-    }
-
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        ClientRegistry.bindTileEntitySpecialRenderer(MeshTileEntity.class, new SculptureRenderer());
     }
 }
