@@ -31,6 +31,8 @@ public final class ShaderUtils {
     public static int sculpture = 0;
     public static int sculpture_modelView = 0;
     public static int sculpture_projection = 0;
+    public static int sculpture_lightPos = 0;
+    public static int sculpture_ambientStrength = 0;
 
     public static void setup() {
         Minecraft mc = Minecraft.getInstance();
@@ -48,6 +50,8 @@ public final class ShaderUtils {
         sculpture = deleteProgram(sculpture);
         sculpture_modelView = 0;
         sculpture_projection = 0;
+        sculpture_lightPos = 0;
+        sculpture_ambientStrength = 0;
 
         loadPrograms(manager);
     }
@@ -56,6 +60,8 @@ public final class ShaderUtils {
         sculpture = createProgram(manager, "sculpture.vsh", "sculpture.fsh");
         sculpture_modelView = glGetUniformLocation(sculpture, "modelView");
         sculpture_projection = glGetUniformLocation(sculpture, "projection");
+        sculpture_lightPos = glGetUniformLocation(sculpture, "lightPos");
+        sculpture_ambientStrength = glGetUniformLocation(sculpture, "ambientStrength");
     }
 
     // Return int as a convenience and shorter way to clear shader IDs

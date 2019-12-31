@@ -1,7 +1,7 @@
 package powerlessri.icesculptures.geometry;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.renderer.Matrix4f;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.world.gen.OctavesNoiseGenerator;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -9,7 +9,6 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.thread.EffectiveSide;
 
-import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -27,30 +26,11 @@ public class Mesh {
     private int vao = 0;
     private int vbo = 0;
 
-    public void setup() {
-        fill();
-        march();
-
-        if (EffectiveSide.get() == LogicalSide.CLIENT) {
-            DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
-                createGLStates();
-                populateVBO();
-            });
-        }
+    public boolean isEmpty() {
+        return triangles.isEmpty();
     }
 
     public void fill() {
-//        Random rand = new Random();
-//        for (int x = 0; x < ppa; x++) {
-//            for (int y = 0; y < ppa; y++) {
-//                for (int z = 0; z < ppa; z++) {
-//                    if (rand.nextBoolean()) {
-//                        lattice.set(indexFromPos(x, y, z));
-//                    }
-//                }
-//            }
-//        }
-
         OctavesNoiseGenerator noise = new OctavesNoiseGenerator(new Random(), 4);
         double t = 0D;
         for (int x = 1; x < ppa - 1; x++) {
@@ -63,33 +43,10 @@ public class Mesh {
                 }
             }
         }
-
-//        int mx = 8;
-//        int my = 8;
-//        int mz = 8;
-//        double r = 6D;
-//        for (int x = 0; x < ppa; x++) {
-//            for (int y = 0; y < ppa; y++) {
-//                for (int z = 0; z < ppa; z++) {
-//                    double d = Math.sqrt((x - mx) * (x - mx) + (y - my) * (y - my) + (z - mz) * (z - mz));
-//                    if (d > r) {
-//                        continue;
-//                    }
-//                    lattice.set(indexFromPos(x, y, z));
-//                }
-//            }
-//        }
-
-//        for (int x = 1; x < ppa - 1; x++) {
-//            for (int y = 1; y < ppa - 1; y++) {
-//                for (int z = 1; z < ppa - 1; z++) {
-//                    lattice.set(indexFromPos(x, y, z));
-//                }
-//            }
-//        }
     }
 
     public void march() {
+        triangles.clear();
         // Each method call on #marchCube covers from (x,y,z) to (x+1,y+1,z+1)
         // not subtracting 1 causes ArrayIndexOutOfBoundsException
         for (int x = 0; x < ppa - 1; x++) {
@@ -116,7 +73,7 @@ public class Mesh {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private void createGLStates() {
+    public void createGLStates() {
         // Create the VBO
         vbo = glGenBuffers();
 
@@ -160,36 +117,26 @@ public class Mesh {
         for (int i = 0, di = 0; i < triangles.size(); i++) {
             Triangle triangle = triangles.get(i);
 
-            // TODO fix normalization
-            // TODO use vertex normal
-            Vector3f edge1 = new Vector3f();
-            Vector3f edge2 = new Vector3f();
-            edge1.sub(triangle.v1, triangle.v0);
-            edge2.sub(triangle.v2, triangle.v0);
-            Vector3f normal = new Vector3f();
-            normal.cross(edge2, edge1);
-            normal.normalize();
-
             data[di++] = triangle.v0.x;
             data[di++] = triangle.v0.y;
             data[di++] = triangle.v0.z;
-            data[di++] = normal.x;
-            data[di++] = normal.y;
-            data[di++] = normal.z;
+            data[di++] = triangle.n0.x;
+            data[di++] = triangle.n0.y;
+            data[di++] = triangle.n0.z;
 
             data[di++] = triangle.v1.x;
             data[di++] = triangle.v1.y;
             data[di++] = triangle.v1.z;
-            data[di++] = normal.x;
-            data[di++] = normal.y;
-            data[di++] = normal.z;
+            data[di++] = triangle.n1.x;
+            data[di++] = triangle.n1.y;
+            data[di++] = triangle.n1.z;
 
             data[di++] = triangle.v2.x;
             data[di++] = triangle.v2.y;
             data[di++] = triangle.v2.z;
-            data[di++] = normal.x;
-            data[di++] = normal.y;
-            data[di++] = normal.z;
+            data[di++] = triangle.n2.x;
+            data[di++] = triangle.n2.y;
+            data[di++] = triangle.n2.z;
         }
         glBufferData(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW);
 
@@ -197,63 +144,19 @@ public class Mesh {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void draw(double x, double y, double z) {
-        // TODO precompute all matrices in CPU code
-        GlStateManager.pushMatrix();
-        GlStateManager.translated(x, y, z);
-        float[] modelView = new float[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, modelView);
-        GlStateManager.popMatrix();
-        float[] projection = new float[16];
-        glGetFloatv(GL_PROJECTION_MATRIX, projection);
-
-        glUseProgram(ShaderUtils.sculpture);
-        glUniformMatrix4fv(ShaderUtils.sculpture_modelView, false, modelView);
-        glUniformMatrix4fv(ShaderUtils.sculpture_projection, false, projection);
-
+    public void draw() {
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
         glBindVertexArray(0);
+    }
 
-        glUseProgram(0);
+    public void read(CompoundNBT compound) {
+        lattice = BitSet.valueOf(compound.getLongArray("Lattice"));
+        march();
+    }
 
-//        Tessellator t = Tessellator.getInstance();
-//        BufferBuilder b = t.getBuffer();
-//        {
-//            b.begin(GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-//            int i = 0;
-//            for (Triangle triangle : triangles) {
-//                if (i == 128) {
-//                    t.draw();
-//                    b.begin(GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-//                }
-//                b.pos(triangle.v0.x, triangle.v0.y, triangle.v0.z).color(0F, 0F, 1F, 1F).endVertex();
-//                b.pos(triangle.v1.x, triangle.v1.y, triangle.v1.z).color(0F, 0F, 1F, 1F).endVertex();
-//                b.pos(triangle.v2.x, triangle.v2.y, triangle.v2.z).color(0F, 0F, 1F, 1F).endVertex();
-//                i++;
-//            }
-//            t.draw();
-//        }
-//        {
-//            glLineWidth(0.5F);
-//            b.begin(GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-//            int i = 0;
-//            for (Triangle triangle : triangles) {
-//                if (i == 128) {
-//                    t.draw();
-//                    b.begin(GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-//                }
-//                b.pos(triangle.v0.x, triangle.v0.y, triangle.v0.z).color(0F, 0F, 0F, 1F).endVertex();
-//                b.pos(triangle.v1.x, triangle.v1.y, triangle.v1.z).color(0F, 0F, 0F, 1F).endVertex();
-//
-//                b.pos(triangle.v1.x, triangle.v1.y, triangle.v1.z).color(0F, 0F, 0F, 1F).endVertex();
-//                b.pos(triangle.v2.x, triangle.v2.y, triangle.v2.z).color(0F, 0F, 0F, 1F).endVertex();
-//
-//                b.pos(triangle.v2.x, triangle.v2.y, triangle.v2.z).color(0F, 0F, 0F, 1F).endVertex();
-//                b.pos(triangle.v0.x, triangle.v0.y, triangle.v0.z).color(0F, 0F, 0F, 1F).endVertex();
-//                i++;
-//            }
-//            t.draw();
-//        }
+    public CompoundNBT write(CompoundNBT compound) {
+        compound.putLongArray("Lattice", lattice.toLongArray());
+        return compound;
     }
 }

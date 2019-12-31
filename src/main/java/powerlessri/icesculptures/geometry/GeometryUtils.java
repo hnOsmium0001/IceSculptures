@@ -330,11 +330,11 @@ public final class GeometryUtils {
 
         int[] triangulation = triangulations[triangulationIdx];
         for (int i = 0; i < triangulation.length; i += 3) {
-            Triangle triangle = Triangle.empty();
-            triangle.v0 = midpointOf(corners[cornerIdxA[triangulation[i]]], corners[cornerIdxB[triangulation[i]]]);
-            triangle.v1 = midpointOf(corners[cornerIdxA[triangulation[i + 1]]], corners[cornerIdxB[triangulation[i + 1]]]);
-            triangle.v2 = midpointOf(corners[cornerIdxA[triangulation[i + 2]]], corners[cornerIdxB[triangulation[i + 2]]]);
-            triangles.add(triangle);
+            triangles.add(Triangle.of(
+                    midpointOf(corners[cornerIdxA[triangulation[i]]], corners[cornerIdxB[triangulation[i]]]),
+                    midpointOf(corners[cornerIdxA[triangulation[i + 1]]], corners[cornerIdxB[triangulation[i + 1]]]),
+                    midpointOf(corners[cornerIdxA[triangulation[i + 2]]], corners[cornerIdxB[triangulation[i + 2]]])
+            ));
         }
     }
 
