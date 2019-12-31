@@ -16,9 +16,12 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.ObjectHolder;
 import powerlessri.icesculptures.IceSculptures;
+import powerlessri.icesculptures.block.MeshTileEntity;
 import powerlessri.icesculptures.block.SculptureBlock;
-import powerlessri.icesculptures.block.SculptureTileEntity;
+import powerlessri.icesculptures.block.SnowGlobeBlock;
 import powerlessri.icesculptures.render.SculptureRenderer;
+
+import java.util.Objects;
 
 @EventBusSubscriber(modid = IceSculptures.MODID, bus = EventBusSubscriber.Bus.MOD)
 public final class ModBlocks {
@@ -26,31 +29,31 @@ public final class ModBlocks {
     private ModBlocks() {
     }
 
-    @ObjectHolder("icesculptures:sculpture_block")
+    @ObjectHolder("icesculptures:sculpture")
     public static SculptureBlock sculptureBlock;
-    @ObjectHolder("icesculptures:sculpture_block")
-    public static TileEntityType<SculptureTileEntity> sculptureTileEntity;
+    @ObjectHolder("icesculptures:snow_globe_view")
+    public static SnowGlobeBlock snowGlobeViewBlock;
+
+    @ObjectHolder("icesculptures:mesh")
+    public static TileEntityType<MeshTileEntity> meshTileEntity;
 
     @SubscribeEvent
     public static void onBlockRegister(RegistryEvent.Register<Block> event) {
         IForgeRegistry<Block> r = event.getRegistry();
-        r.register(new SculptureBlock(Block.Properties.create(Material.ICE).slipperiness(0.98F).hardnessAndResistance(0.5F).sound(SoundType.GLASS)).setRegistryName(new ResourceLocation(IceSculptures.MODID, "sculpture_block")));
+        r.register(new SculptureBlock(Block.Properties.create(Material.ICE).slipperiness(0.98F).hardnessAndResistance(0.5F).sound(SoundType.GLASS)).setRegistryName(new ResourceLocation(IceSculptures.MODID, "sculpture")));
+        r.register(new SnowGlobeBlock(Block.Properties.create(Material.ICE).slipperiness(0.98F).hardnessAndResistance(0.5F).sound(SoundType.GLASS)).setRegistryName(new ResourceLocation(IceSculptures.MODID, "snow_globe_view")));
     }
 
     @SubscribeEvent
     public static void onItemRegister(RegistryEvent.Register<Item> event) {
         IForgeRegistry<Item> r = event.getRegistry();
-        r.register(new BlockItem(sculptureBlock, new Item.Properties().group(ItemGroup.MISC)).setRegistryName(sculptureBlock.getRegistryName()));
+//        r.register(new BlockItem(sculptureBlock, new Item.Properties().group(ItemGroup.MISC)).setRegistryName(Objects.requireNonNull(sculptureBlock.getRegistryName())));
+        r.register(new BlockItem(snowGlobeViewBlock, new Item.Properties().group(ItemGroup.MISC)).setRegistryName(Objects.requireNonNull(snowGlobeViewBlock.getRegistryName())));
     }
 
     @SubscribeEvent
     public static void onTileEntityRegister(RegistryEvent.Register<TileEntityType<?>> event) {
         IForgeRegistry<TileEntityType<?>> r = event.getRegistry();
-        r.register(TileEntityType.Builder.create(SculptureTileEntity::new, sculptureBlock).build(null).setRegistryName(sculptureBlock.getRegistryName()));
-    }
-
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        ClientRegistry.bindTileEntitySpecialRenderer(SculptureTileEntity.class, new SculptureRenderer());
+        r.register(TileEntityType.Builder.create(MeshTileEntity::new, sculptureBlock, snowGlobeViewBlock).build(null).setRegistryName(new ResourceLocation(IceSculptures.MODID, "mesh")));
     }
 }

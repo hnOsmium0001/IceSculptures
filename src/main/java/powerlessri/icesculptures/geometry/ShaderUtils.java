@@ -28,11 +28,11 @@ public final class ShaderUtils {
     private ShaderUtils() {
     }
 
-    public static int sculpture = 0;
-    public static int sculpture_modelView = 0;
-    public static int sculpture_projection = 0;
-    public static int sculpture_lightPos = 0;
-    public static int sculpture_ambientStrength = 0;
+    public static int mesh = 0;
+    public static int mesh_modelView = 0;
+    public static int mesh_projection = 0;
+    public static int mesh_lightPos = 0;
+    public static int mesh_ambientStrength = 0;
 
     public static void setup() {
         Minecraft mc = Minecraft.getInstance();
@@ -47,21 +47,21 @@ public final class ShaderUtils {
             return;
         }
 
-        sculpture = deleteProgram(sculpture);
-        sculpture_modelView = 0;
-        sculpture_projection = 0;
-        sculpture_lightPos = 0;
-        sculpture_ambientStrength = 0;
+        mesh = deleteProgram(mesh);
+        mesh_modelView = 0;
+        mesh_projection = 0;
+        mesh_lightPos = 0;
+        mesh_ambientStrength = 0;
 
         loadPrograms(manager);
     }
 
     private static void loadPrograms(IResourceManager manager) {
-        sculpture = createProgram(manager, "sculpture.vsh", "sculpture.fsh");
-        sculpture_modelView = glGetUniformLocation(sculpture, "modelView");
-        sculpture_projection = glGetUniformLocation(sculpture, "projection");
-        sculpture_lightPos = glGetUniformLocation(sculpture, "lightPos");
-        sculpture_ambientStrength = glGetUniformLocation(sculpture, "ambientStrength");
+        mesh = createProgram(manager, "mesh.vsh", "mesh.fsh");
+        mesh_modelView = glGetUniformLocation(mesh, "modelView");
+        mesh_projection = glGetUniformLocation(mesh, "projection");
+        mesh_lightPos = glGetUniformLocation(mesh, "lightPos");
+        mesh_ambientStrength = glGetUniformLocation(mesh, "ambientStrength");
     }
 
     // Return int as a convenience and shorter way to clear shader IDs

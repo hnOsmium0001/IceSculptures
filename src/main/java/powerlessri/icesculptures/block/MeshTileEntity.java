@@ -6,30 +6,22 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.common.thread.EffectiveSide;
 import powerlessri.icesculptures.geometry.Mesh;
 import powerlessri.icesculptures.setup.ModBlocks;
 
-import javax.annotation.Nullable;
+public class MeshTileEntity extends TileEntity implements ITickableTileEntity {
 
-public class SculptureTileEntity extends TileEntity implements ITickableTileEntity {
+    public final Mesh mesh = new Mesh();
 
-    private Mesh mesh;
-
-    public SculptureTileEntity() {
-        super(ModBlocks.sculptureTileEntity);
-        mesh = new Mesh();
+    public MeshTileEntity() {
+        super(ModBlocks.meshTileEntity);
     }
 
     @Override
     public void tick() {
         Preconditions.checkNotNull(world);
-        if (!world.isRemote && mesh.isEmpty()) {
-            mesh.fill();
+        if (!world.isRemote) {
             world.notifyBlockUpdate(pos, getBlockState(), getBlockState(), Constants.BlockFlags.DEFAULT);
         }
     }

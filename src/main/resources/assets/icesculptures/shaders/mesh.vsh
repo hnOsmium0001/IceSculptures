@@ -8,12 +8,12 @@ layout(location = 1) in vec3 normal;
 //layout(location = 2) in vec3 color;
 
 out vec3 fragPos;
-out vec3 interpolatedNormal;
+out vec3 fragNormal;
 
 void main(){
     // OpenGL-defined position output for the vertex
     gl_Position = projection * modelView * vec4(pos, 1.0);
     // Widll be interpolated per-fragment
     fragPos = pos;
-    interpolatedNormal = normal;
+    fragNormal = normal;
 }

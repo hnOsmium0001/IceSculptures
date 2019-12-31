@@ -4,6 +4,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -12,7 +13,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import powerlessri.icesculptures.block.MeshTileEntity;
 import powerlessri.icesculptures.geometry.ShaderUtils;
+import powerlessri.icesculptures.render.SculptureRenderer;
+import powerlessri.icesculptures.setup.ModBlocks;
 
 @Mod(IceSculptures.MODID)
 public class IceSculptures {
@@ -43,6 +47,7 @@ public class IceSculptures {
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
+        ClientRegistry.bindTileEntitySpecialRenderer(MeshTileEntity.class, new SculptureRenderer());
     }
 
     private void loadComplete(final FMLLoadCompleteEvent event) {

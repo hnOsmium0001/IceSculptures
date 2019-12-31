@@ -1,7 +1,7 @@
 package powerlessri.icesculptures.geometry;
 
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.OctavesNoiseGenerator;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -30,13 +30,18 @@ public class Mesh {
         return triangles.isEmpty();
     }
 
-    public void fill() {
-        OctavesNoiseGenerator noise = new OctavesNoiseGenerator(new Random(), 4);
+    private static OctavesNoiseGenerator noise = new OctavesNoiseGenerator(new Random(), 4);
+
+    public void fill(BlockPos pos) {
         double t = 0D;
         for (int x = 1; x < ppa - 1; x++) {
             for (int y = 1; y < ppa - 1; y++) {
                 for (int z = 1; z < ppa - 1; z++) {
-                    double v = noise.func_215462_a(x / 2D, y / 2D, z / 2D, 0D, 0D, false);
+                    double v = noise.func_215462_a(
+                            pos.getX() * 8 + x / 2D,
+                            pos.getY() * 8 + y / 2D,
+                            pos.getZ() * 8 + z / 2D,
+                            0D, 0D, false);
                     if (v > t) {
                         lattice.set(indexFromPos(x, y, z));
                     }
