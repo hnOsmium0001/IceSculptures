@@ -23,18 +23,19 @@ import powerlessri.icesculptures.render.SculptureRenderer;
 
 import java.util.Objects;
 
+@ObjectHolder(IceSculptures.MODID)
 @EventBusSubscriber(modid = IceSculptures.MODID, bus = EventBusSubscriber.Bus.MOD)
 public final class ModBlocks {
 
     private ModBlocks() {
     }
 
-    @ObjectHolder(IceSculptures.MODID + ":sculpture")
+    @ObjectHolder("sculpture")
     public static SculptureBlock sculptureBlock;
-    @ObjectHolder(IceSculptures.MODID + ":snow_globe_view")
+    @ObjectHolder("snow_globe_view")
     public static SnowGlobeBlock snowGlobeViewBlock;
 
-    @ObjectHolder(IceSculptures.MODID + ":mesh")
+    @ObjectHolder("mesh")
     public static TileEntityType<MeshTileEntity> meshTileEntity;
 
     @SubscribeEvent

@@ -13,16 +13,23 @@ import powerlessri.icesculptures.setup.ModBlocks;
 public class MeshTileEntity extends TileEntity implements ITickableTileEntity {
 
     public final Mesh mesh = new Mesh();
+    private transient boolean dirty = false;
 
     public MeshTileEntity() {
         super(ModBlocks.meshTileEntity);
     }
 
     @Override
+    public void onLoad() {
+        dirty = true;
+    }
+
+    @Override
     public void tick() {
         Preconditions.checkNotNull(world);
-        if (!world.isRemote) {
+        if (!world.isRemote && dirty) {
             world.notifyBlockUpdate(pos, getBlockState(), getBlockState(), Constants.BlockFlags.DEFAULT);
+            dirty = false;
         }
     }
 

@@ -13,7 +13,7 @@ import powerlessri.icesculptures.render.SculptureRenderer;
 public final class ModClientEventHandlers {
 
     @SubscribeEvent
-    public void onClientSetup(FMLClientSetupEvent event) {
+    public static void onClientSetup(FMLClientSetupEvent event) {
         ClientRegistry.bindTileEntitySpecialRenderer(MeshTileEntity.class, new SculptureRenderer());
     }
 }

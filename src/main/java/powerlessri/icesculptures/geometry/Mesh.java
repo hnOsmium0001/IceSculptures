@@ -89,18 +89,21 @@ public class Mesh {
             // Setup the attributes, note that attributes can live in different VBOs, we only use one here for simplicity
             // Technically we only need to bind the VBO once here, but I left it for clarity
 
+            // Position + normal
+            int stride = Float.BYTES * 3 + Float.BYTES * 3;
+
             // Position attribute
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, Float.BYTES * 3 * 2 /* Size of color + normal attribute */, 0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0);
             // Normal attribute
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, Float.BYTES * 3 * 2 /* Size of color + position attribute */, Float.BYTES * 3 /* Size of a position attribute */);
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, stride, Float.BYTES * 3 /* Size of a position attribute */);
 //            // Color attribute
 //            glBindBuffer(GL_ARRAY_BUFFER, vbo);
 //            glEnableVertexAttribArray(2);
-//            glVertexAttribPointer(2, 3, GL_FLOAT, false, Float.BYTES * 3 * 2 /* Size of position + normal attribute */, Float.BYTES * 3 * 2 /* Size of a position and a normal attribute */);
+//            glVertexAttribPointer(2, 3, GL_FLOAT, false, stride, Float.BYTES * 3 * 2 /* Size of a position and a normal attribute */);
 
             // VAO does not track bound VBO directly, unbind to avoid accidental modification
             glBindBuffer(GL_ARRAY_BUFFER, 0);
