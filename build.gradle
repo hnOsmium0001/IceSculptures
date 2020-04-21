@@ -6,11 +6,13 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 version = "${mod_version}"
 group = "powerlessri.icesculptures"
@@ -109,14 +111,30 @@ jar {
 
     manifest {
         attributes([
-                "Specification-Title"     : "harmonicscore",
-                "Specification-Vendor"    : "harmonicscoresareus",
+                "Specification-Title"     : "icesculptures",
+                "Specification-Vendor"    : "hnOsmuim0001",
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : "${version}",
-                "Implementation-Vendor"   : "harmonicscoresareus",
+                "Implementation-Vendor"   : "hnOsmuim0001",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
+    }
+}
+
+bintray {
+    user = findProperty('bintray.user')
+    key = findProperty('bintray.apiKey')
+    publications = ['BintrayPublication']
+    pkg {
+        repo = 'Maven'
+        name = 'ice-sculptures'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/hnOsmium0001/IceSculptures.git'
+        version {
+            name = "$project.version"
+            released = new Date()
+        }
     }
 }
 
@@ -125,24 +143,14 @@ def reobfArtifact = artifacts.add('default', reobfFile) {
     type 'jar'
     builtBy 'reobfJar'
 }
+
 publishing {
     publications {
-        maven(MavenPublication) {
+        BintrayPublication(MavenPublication) {
             artifact reobfArtifact
-            pom {
-                url.set("https://github.com/hnOsmium0001/HarmonicsCore.git")
-            }
-        }
-    }
-    repositories {
-        maven {
-            name = "Github"
-            url = "https://maven.pkg.github.com/hnOsmium0001/HarmonicsCore"
-            credentials {
-                // findProperty will allow these properties to be absent and still run the build, just won't publish
-                username = findProperty("github.username")
-                password = findProperty("github.gpr_token")
-            }
+            groupId project.group
+            artifactId 'ice-sculptures'
+            version project.version
         }
     }
 }
